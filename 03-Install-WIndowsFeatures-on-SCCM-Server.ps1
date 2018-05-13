@@ -21,24 +21,25 @@
     WSUS 3.0 SP2
 #>
 
+$FeaturesSource = "Z:\sources\sxs"
+
 $Features = @(
 "Web-Windows-Auth",
-"Web-ISAPI-Ext"
-"Web-Metabase"
-"Web-WMI"
-"BITS"
-"RDC"
-"Web-Asp-Net"
-"Web-Asp-Net45"
-"NET-HTTP-Activation"
-"NET-Non-HTTP-Activ"
+"Web-ISAPI-Ext",
+"Web-Metabase",
+"Web-WMI",
+"BITS",
+"RDC",
+"Web-Asp-Net",
+"Web-Asp-Net45",
+"NET-HTTP-Activation",
+"NET-Non-HTTP-Activ",
+"NET-Framework-Features"
 )
 
 foreach($Feature in $Features)
 {
-    Install-WindowsFeature -Name $Feature
+    Install-WindowsFeature -Name $Feature -source $FeaturesSource
 }
 
-
-#Install-WindowsFeature NET-Framework-Features -source \\yournetwork\yourshare\sxs
 
