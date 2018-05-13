@@ -1,5 +1,5 @@
 # SCCM-Scripts
-A bunch of usefull scripts for SCCM installation
+A bunch of usefull scripts for SCCM installation.
 
 - 00-Create-system-container
 
