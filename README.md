@@ -8,3 +8,7 @@ Update the AD schema by creating System Management Container for SCCM and giving
 - 01-Create-SCCM-users-and-groups
 
 Creation of usefull users and groups that SCCM will need
+
+- 03-Install-WIndowsFeatures-on-SCCM-Server
+
+Installation of all needed WIndows features on SCCM Site Server
