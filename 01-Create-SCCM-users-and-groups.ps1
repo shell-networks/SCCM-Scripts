@@ -20,10 +20,11 @@ Import-Module ActiveDirectory
 
 #region Variables
 
-$GroupsNamingConvention = "SHN-GG-"
+$GroupsNamingConvention = "GG-SHN-"
 $AccountsNamingConvention = "shn-svc-"
 $SccmUsersPath = "OU=Services accounts,OU=Users,OU=1 - Admins Users and Groups,OU=AGEN,OU=Shell-networks,DC=shell-networks,DC=local" #Path where users are going to be created within AD
 $SccmGroupsPath = "OU=Groups,OU=1 - Admins Users and Groups,OU=AGEN,OU=Shell-networks,DC=shell-networks,DC=local" #Path where groups are going to be created within AD
+$AccountsPassword = "password123" | ConvertTo-SecureString -AsPlainText -Force #Here your super password for accounts
 
 #endregion
 
@@ -31,7 +32,6 @@ $SccmGroupsPath = "OU=Groups,OU=1 - Admins Users and Groups,OU=AGEN,OU=Shell-net
 
 function Set-SccmUsersAndGroups
 {
-
     <#
         .SYNOPSIS
         Use this to create users and groups that SCCM will need
@@ -45,6 +45,8 @@ function Set-SccmUsersAndGroups
         Naming convention to add before the username
         .PARAMETER GroupsNamingConvention
         Naming convention to add before the group name
+        .PARAMETER AccountsPassword
+        Password to set for services accounts
         .EXAMPLE
         Set-SccmUsersAndGroups -SccmUsersPath -SccmGroupsPath -AccountsNamingConvention -GroupsNamingConvention
     #>
@@ -61,22 +63,56 @@ function Set-SccmUsersAndGroups
     $AccountsNamingConvention,
     [Parameter(Mandatory = $True,Position = 3)]
     [String]
-    $GroupsNamingConvention
+    $GroupsNamingConvention,
+    [Parameter(Mandatory = $True,Position = 4)]
+    [System.Security.SecureString]
+    $AccountsPassword
     ) 
 
-    $SccmAccounts = @("SCCM-SQLService","SCCM-NAA","SCCM-ClientPush","SCCM-SQLReporting","SCCM-DomainJoin")
-    $SccmGroups = @("SCCM-Admins","SCCM-SiteServers")
+    $SccmAccounts = @(
+            @{
+                Name = "SCCM-SQL"
+                Description = "SQL server service account for SCCM"
+            },
+            @{
+                Name = "SCCM-NAA"
+                Description = "SCCM Network Access Account"
+            },
+            @{
+                Name = "SCCM-CPush"
+                Description = "Domain user account for use SCCM client push install"
+            },
+            @{
+                Name = "SCCM-SQLRep"
+                Description = "Domain user account for use with reporting services User"
+            },
+            @{
+                Name = "SCCM-DomJoin"
+                Description = "Domain account used to join machine to the domain during OSD"
+            }        
+        )
+    $SccmGroups = @(
+        @{
+            Name = "SCCM-Admins"
+            Description = "Domain group containing all SCCM Admins Group"
+        },
+        @{
+            Name = "SCCM-SiteServers"
+            Description = "Domain group containing all SCCM servers in the hierarchy Group"
+        }
+        )
 
-    foreach($Account in $SccmAccounts)
+    foreach($Account in $SccmAccounts) #First we create accounts
     {
-        $Account = "$($AccountsNamingConvention)$($Account)"#Here we respect naming convention for accounts
+        $Name = "$($AccountsNamingConvention)$($Account.Name)"#Here we respect naming convention for accounts
 
-        Write-Host -ForegroundColor Cyan "Creating account $($Account)"
+        Write-Host -ForegroundColor Cyan "Creating account $($Name)"
 
         $Create = $True
         try 
         {
-            New-ADUser -Name $Account -Path $SccmUsersPath
+            New-ADUser -Name $Name -Path $SccmUsersPath -Description $Account.Description `
+            -AccountPassword $AccountsPassword -PasswordNeverExpires $True -Enabled $True
         }
         catch 
         {
@@ -85,13 +121,37 @@ function Set-SccmUsersAndGroups
 
         if($Create)
         {
-            Write-Host -ForegroundColor Green "$($Account) created"
+            Write-Host -ForegroundColor Green "$($Name) created"
         }
         else 
         {
-            
+            Write-Host -ForegroundColor Red "Error during $($Name) creation"
+        }    
+    }
+
+    foreach($Group in $SccmGroups) #Then we create the groups
+    {
+        $Name = "$($GroupsNamingConvention)$($Group.Name)"#Here we respect naming convention for accounts
+
+        $Create = $True
+        try 
+        {
+            New-ADGroup -GroupScope Global -Name $Name -Description $Group.Description `
+            -Path $SccmGroupsPath
         }
-     
+        catch 
+        {
+            $Create = $False
+        }
+        
+        if($Create)
+        {
+            Write-Host -ForegroundColor Green "$($Name) created"
+        }
+        else 
+        {
+            Write-Host -ForegroundColor Red "Error during $($Name) creation"
+        } 
     }
 }
 
@@ -100,6 +160,7 @@ function Set-SccmUsersAndGroups
 #region script
 
 Set-SccmUsersAndGroups -SccmUsersPath $SccmUsersPath -SccmGroupsPath $SccmGroupsPath `
--AccountsNamingConvention $AccountsNamingConvention -GroupsNamingConvention $GroupsNamingConvention
+-AccountsNamingConvention $AccountsNamingConvention -GroupsNamingConvention $GroupsNamingConvention `
+-AccountsPassword $AccountsPassword
 
 #endregion
