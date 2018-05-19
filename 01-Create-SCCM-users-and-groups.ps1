@@ -20,6 +20,7 @@ Import-Module ActiveDirectory
 
 #region Variables
 
+$SiteServer = "SHNPRODSCM01"
 $GroupsNamingConvention = "GG-SHN-"
 $AccountsNamingConvention = "shn-svc-"
 $SccmUsersPath = "OU=Services accounts,OU=Users,OU=1 - Admins Users and Groups,OU=AGEN,OU=Shell-networks,DC=shell-networks,DC=local" #Path where users are going to be created within AD
@@ -47,6 +48,8 @@ function Set-SccmUsersAndGroups
         Naming convention to add before the group name
         .PARAMETER AccountsPassword
         Password to set for services accounts
+        .PARAMETER SiteServers
+        SCCM Site servers
         .EXAMPLE
         Set-SccmUsersAndGroups -SccmUsersPath -SccmGroupsPath -AccountsNamingConvention -GroupsNamingConvention
     #>
@@ -66,7 +69,10 @@ function Set-SccmUsersAndGroups
     $GroupsNamingConvention,
     [Parameter(Mandatory = $True,Position = 4)]
     [System.Security.SecureString]
-    $AccountsPassword
+    $AccountsPassword,
+    [Parameter(Mandatory = $True,Position = 5)]
+    [String]
+    $SiteServers
     ) 
 
     $SccmAccounts = @(
@@ -153,6 +159,21 @@ function Set-SccmUsersAndGroups
             Write-Host -ForegroundColor Red "Error during $($Name) creation"
         } 
     }
+
+    foreach($Server in $SiteServers)#Finally we add users or computers accounts into groups
+    {
+        $SiteServerGroup = "$($GroupsNamingConvention)$($SccmGroups[1].name)"
+        Write-Host -ForegroundColor Cyan "Adding $($Server) in $($SiteServerGroup)"
+        
+        try 
+        {
+            Add-ADGroupMember -Identity $SiteServerGroup -Members $(get-adcomputer $Server)
+        }
+        catch 
+        {
+            Write-Host -ForegroundColor Red "Error adding $($Server) to group $($SiteServerGroup)"
+        }
+    }
 }
 
 #endregion
@@ -161,6 +182,6 @@ function Set-SccmUsersAndGroups
 
 Set-SccmUsersAndGroups -SccmUsersPath $SccmUsersPath -SccmGroupsPath $SccmGroupsPath `
 -AccountsNamingConvention $AccountsNamingConvention -GroupsNamingConvention $GroupsNamingConvention `
--AccountsPassword $AccountsPassword
+-AccountsPassword $AccountsPassword -SiteServers $SiteServer
 
 #endregion
