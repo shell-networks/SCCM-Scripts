@@ -35,8 +35,7 @@ $Features = @(
 "NET-HTTP-Activation",
 "NET-Non-HTTP-Activ",
 "NET-Framework-Features",
-"UpdateServices-Services",
-"UpdateServices-WidDB"
+"UpdateServices-Services"
 )
 
 foreach($Feature in $Features)
