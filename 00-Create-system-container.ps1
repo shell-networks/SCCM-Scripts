@@ -10,7 +10,7 @@
     Use this script to create the system management container in the AD schema
     .DESCRIPTION
     1 - Creation of the container
-    2 - Attributing rights on the container for the choosen server (should be site server)  
+    2 - Attributing rights on the container for the choosen server group (they should be site server)  
 #>
 
 #region Modules
@@ -19,7 +19,7 @@ Import-Module ActiveDirectory
 
 #region Variables
 $DomainDN = (Get-ADDomain).DistinguishedName
-$SiteServer = "SHNPRODSCM01"
+$SiteServerGroup = "GG-SHN-SCCM-SiteServers"
 
 #endregion
 
@@ -42,7 +42,7 @@ function Set-SystemManagementContainer
     Param (
     [Parameter(Mandatory = $True,Position = 0)]
     [String]
-    $ServerName,
+    $ServerGroupName,
     [Parameter(Mandatory = $True,Position = 1)]
     [String]
     $DistinguishedName
@@ -82,10 +82,10 @@ function Set-SystemManagementContainer
 
             $ContainerACL = Get-Acl -Path "AD:\$($Container)" #Now we are going to give good acl on this container
 
-            write-host -ForegroundColor Cyan "Querying SID for SCCM Server"
+            write-host -ForegroundColor Cyan "Querying SID for SCCM Server Group"
             try 
             {
-                $ServerSid = (Get-ADComputer -Identity $ServerName).SID #Query of the SID for the SCCM Server
+                $ServerGroupSid = (Get-ADGroup -Identity $ServerGroupName).SID #Query of the SID for the SCCM Server
             }
             catch 
             {
@@ -97,7 +97,7 @@ function Set-SystemManagementContainer
             $AdRights = [System.DirectoryServices.ActiveDirectoryRights] "GenericAll"
             $Type = [System.Security.AccessControl.AccessControlType] "Allow"
             $InheritanceType = [System.DirectoryServices.ActiveDirectorySecurityInheritance] "All"
-            $ACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule $ServerSid,$AdRights,$Type,$InheritanceType
+            $ACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule $ServerGroupSid,$AdRights,$Type,$InheritanceType
 
             $ContainerACL.AddAccessRule($ACE) #Here we add our now entry to the ACL of the container
             
@@ -110,7 +110,7 @@ function Set-SystemManagementContainer
             }
             catch 
             {
-                Write-Host -ForegroundColor Red "Error commiting the ACL for the server $($ServerName)"
+                Write-Host -ForegroundColor Red "Error commiting the ACL for the server group $($ServerGroupName)"
                 $Commit = $False
             }
             
@@ -133,6 +133,6 @@ function Set-SystemManagementContainer
 
 #region Script
 
-Set-SystemManagementContainer -ServerName $SiteServer -DistinguishedName $DomainDN
+Set-SystemManagementContainer -ServerGroupName $SiteServerGroup -DistinguishedName $DomainDN
 
 #endregion
