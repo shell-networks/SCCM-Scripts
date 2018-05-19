@@ -19,5 +19,8 @@ $SccmSQLConfigFile = ".\05-SQL-ConfigurationFile.ini" #Here is the custom ini fi
 
 & $SqlExePath /IACCEPTSQLSERVERLICENSETERMS /CONFIGURATIONFILE=$SccmSQLConfigFile /QUIETSIMPLE
 
-New-NetFirewallRule -Name "SQL SCCM INBOUND" -DisplayName "SQL SCCM INBOUND" -Description "All nescessary inbound ports for SCCM instance" `
+New-NetFirewallRule -Name "SHN-SQL SCCM INBOUND" -DisplayName "SHN-SQL SCCM INBOUND" -Description "All nescessary inbound ports for SCCM instance" `
 -Profile Domain -Direction Inbound -LocalPort "135","1433","4022" -Enabled True -Protocol TCP
+
+New-NetFirewallRule -Name "SHN-RPC SCCM INBOUND" -DisplayName "SHN-RPC SCCM INBOUND" -Description "RPC Dynamic ports for SCCM" `
+-Profile Domain -Direction Inbound -Protocol TCP -LocalPort RPC 
