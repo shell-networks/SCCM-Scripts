@@ -9,6 +9,10 @@ Creation of usefull users and groups that SCCM will need
 
 Update the AD schema by creating System Management Container for SCCM and giving rights to site server
 
+- 02-No-SMS-on-Drives
+
+Creation of no_sms_on_drive.sms file on drives you dont want SCCM to install files
+
 - 03-Install-WIndowsFeatures-on-SCCM-Server
 
 Installation of all needed WIndows features on SCCM Site Server
