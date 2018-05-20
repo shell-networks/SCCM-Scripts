@@ -1,5 +1,6 @@
 # SCCM-Scripts
 A bunch of usefull scripts for SCCM installation.
+It has to be done step by step to perform a SCCM install for a standalone primary site, with a database hosted on another server.
 
 - 00-Create-SCCM-users-and-groups
 
